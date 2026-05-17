@@ -147,7 +147,7 @@ local CreateAddressFromDescendantToParent = function(Descendant, Parent)
 	return Address
 end
 
-CreateInstanceMap = function(TargetInstance, IncludeDescendants, PrintProcess, MainInstanceReference, IncludeAttributes, DisallowedProperties, PropertyCompression)
+CreateInstanceMap = function(TargetInstance, IncludeDescendants, PrintProcess, MainInstanceReference, IncludeAttributes, DisallowedProperties, WhitelistedProperties, PropertyCompression)
 	local ClassName = __index(TargetInstance, "ClassName")
 
 	local Map = {
@@ -165,7 +165,7 @@ CreateInstanceMap = function(TargetInstance, IncludeDescendants, PrintProcess, M
 		return
 	end
 
-	local FreshInstance, PropertiesOfClass
+	local FreshInstance, PropertiesOfClass = NULL, {}
 	local PropertiesInMap = Map.P
 	local FoundValidPropertyOnce = false
 	local CachedFreshInstance = InstanceReferenceCache[ClassName]
@@ -178,7 +178,6 @@ CreateInstanceMap = function(TargetInstance, IncludeDescendants, PrintProcess, M
 			["ExcludeDisplay"] = true,
 			["Security"] = SecurityCapabilities.fromCurrent(),
 		})
-		local PropertiesOfClass = {}
 
 		for _,v in pairs(PropertiesList) do
 			if v.Permits.Write and v.Permits.Read then
@@ -204,6 +203,16 @@ CreateInstanceMap = function(TargetInstance, IncludeDescendants, PrintProcess, M
 
 			if List then
 				if List[Property] then
+					continue
+				end
+			end
+		end
+
+		if WhitelistedProperties then
+			local List = WhitelistedProperties[ClassName]
+
+			if List then
+				if not List[Property] then
 					continue
 				end
 			end
@@ -278,7 +287,7 @@ CreateInstanceMap = function(TargetInstance, IncludeDescendants, PrintProcess, M
 			local MicroOptimizationReference = Map.K
 
 			for _, Child in ipairs(Children) do
-				local NewInstanceMap = CreateInstanceMap(Child, true, PrintProcess, MainInstanceReference, IncludeAttributes, DisallowedProperties, PropertyCompression)
+				local NewInstanceMap = CreateInstanceMap(Child, true, PrintProcess, MainInstanceReference, IncludeAttributes, DisallowedProperties, WhitelistedProperties, PropertyCompression)
 
 				if NewInstanceMap then
 					table_insert(MicroOptimizationReference, NewInstanceMap)
@@ -518,7 +527,8 @@ Minstance.SerializeInstance = function(TargetInstance: Instance, SerializationSe
 	AnnoyingConsolePrints: boolean,
 	UseLegacySlowCompressor: boolean,
 	IncludeAttributes: boolean,
-	DisallowedProperties: {[string]: {[string]: any} } | nil
+	DisallowedProperties: {[string]: {[string]: any} } | nil,
+	WhitelistedProperties: {[string]: {[string]: any} } | nil
 	})
 	
 	local StartBenchmarkTime
@@ -531,7 +541,8 @@ Minstance.SerializeInstance = function(TargetInstance: Instance, SerializationSe
 		AnnoyingConsolePrints = false,
 		UseLegacySlowCompressor = false,
 		IncludeAttributes = true,
-		DisallowedProperties = NULL
+		DisallowedProperties = NULL,
+		WhitelistedProperties = NULL,
 		-- EXAMPLE:
 		-- {
 			--	["Part"] = {
@@ -563,11 +574,15 @@ Minstance.SerializeInstance = function(TargetInstance: Instance, SerializationSe
 		StartBenchmarkTime = os_clock()
 	end
 
+	if Settings.DisallowedProperties and Settings.WhitelistedProperties then
+		return ThrowToConsole("Cannot specify both DisallowedProperties and WhitelistedProperties in SerializationSettings. Use one or the other to fix this error.")
+	end
+
 	if PropertyCompressionCount > 0 then
 		PropertyCompressionCount = 0
 	end
 
-	local MainMap = CreateInstanceMap(TargetInstance, Settings.IncludeDescendants, Settings.AnnoyingConsolePrints, TargetInstance, Settings.IncludeAttributes, Settings.DisallowedProperties)
+	local MainMap = CreateInstanceMap(TargetInstance, Settings.IncludeDescendants, Settings.AnnoyingConsolePrints, TargetInstance, Settings.IncludeAttributes, Settings.DisallowedProperties, Settings.WhitelistedProperties)
 
 	if PropertyCompressionCount > 0 then
 		PropertyCompressionCount = 0
