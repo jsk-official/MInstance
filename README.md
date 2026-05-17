@@ -1,10 +1,10 @@
 # MinifyInstance
 Fork of MinifyInstance/MInstance, an Instance serializer for Roblox
 
-# Why a fork?
+## Why a fork?
 The original creator is no longer interested in Roblox.
 
-# MInstance
+## MInstance
 MInstance is an open source, high performance, and lightweight Instance Serialization Module for Roblox Instances written in pure Luau. It has pretty much everything that you would need. Not only does it beat every other modules in terms of serialization speed, but also in serialized data compression ratio. This has only been in development for 2 days, but already has all of the features you need, while not letting a single CPU cycle go to waste.
 
 Current Version: 1.1
