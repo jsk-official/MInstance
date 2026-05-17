@@ -1,6 +1,5 @@
 # MInstance
-MInstance is a fork of an open source, high performance, and lightweight Instance Serialization Module for Roblox Instances written in pure Luau. It has pretty much everything that you would need. Not only does it beat every other modules in terms of serialization speed, but also in serialized data compression ratio. This has only been in development for 2 days, but already has all of the features you need, while not letting a single CPU cycle go to waste.
-
+MInstance is a fork of an open source, high performance, and lightweight Instance Serialization Module for Roblox Instances written in pure Luau. Not only does it beat every other module in terms of serialization speed, but also in serialized data compression ratio. This has all of the features you need, while not letting a single CPU cycle go to waste.
 Current Version: 1.1
 
 ---
@@ -15,7 +14,7 @@ Here are a few reasons:
 - Supports properties with its value being set to reference to another Instance, achieving this without setting UUIDs. This allows properties such as `SelectionBox.Adornee` to perfectly work as long as it is referencing an Instance that is a descendant of the main Instance being deserialized.
 - Supports MeshParts, which some other serializers fail to serialize properly. This is optional and you have to manually enable it in DeserializationSettings. (LOADS SLOW due to requiring to fetch the assets from Roblox's APIs)
 - Serializes attributes.
-- Instead of relying on an API dump to get properties like all other serializers do, the module will be updated to use `ReflectionService:GetPropertiesOfClass()` the moment that it is enabled, which is more futureproof than relying on the API dump.
+- Instead of relying on an API dump to get properties like all other serializers do, the module has been updated to use `ReflectionService:GetPropertiesOfClass()`, which is more futureproof than relying on the API dump.
 - You have the option to encode serialized data into Base94, which allows you to store serialized data into DataStore.
 - And many more!
 
@@ -49,6 +48,7 @@ SerializationSettings Format:
 * AnnoyingConsolePrints: If this is set to `true`, it will print in the console how long it took to serialize or deserialize data every single time you call SerializeInstance or DeserializeInstance.
 * UseLegacySlowCompressor: Determines if the serialized data should be compressed with the old and slow compressor (https://devforum.roblox.com/t/string-compression-zlibdeflate/755687) or use Roblox's natively compiled zstd compressor. This is absolutely NOT recommended unless the zstd compression breaks.
 * IncludeAttributes: Determines if attributes of the Instance(s) should also be serialized
+* WhitelistedProperties: A dictionary containing the properties that you want to include in serialization, while ignoring any other property not on that list. Cannot be set if DisallowedProperties is also set. Takes in a table where the key is a ClassName and the value is a table with property names as keys, and the value set to "true". See DisallowedProperties.
 * DisallowedProperties: A dictionary containing the properties that you do not want to include in serialization. If there isn't any property that you want to exclude, simply leave this nil. But for example, if you want to do something like exclude property "BrickColor" of class "Part" and "MeshPart", you can pass the table below:
 ```lua
 {
@@ -97,7 +97,8 @@ local SerializationSettings = {
 	AnnoyingConsolePrints = true,
 	UseLegacySlowCompressor = false,
 	IncludeAttributes = true,
-	DisallowedProperties = nil
+	DisallowedProperties = nil,
+	WhitelistedProperties = nil
 }
 
 local DeserializationSettings = {
